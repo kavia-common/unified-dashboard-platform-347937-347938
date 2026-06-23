@@ -4,13 +4,13 @@ from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, Te
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
-from app.models.dialects import DialectARRAYText, DialectJSONB, DialectUUID
+from app.models.dialects import DialectARRAYText, DialectJSONB, DialectUUID, uuid_pk_column
 
 
 class UserGoal(Base):
     __tablename__ = "user_goal"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -33,7 +33,7 @@ class UserGoal(Base):
 class Exercise(Base):
     __tablename__ = "exercise"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     created_by: Mapped[str | None] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="SET NULL"),
@@ -62,7 +62,7 @@ class Exercise(Base):
 class WorkoutTemplate(Base):
     __tablename__ = "workout_template"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     owner_user_id: Mapped[str | None] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -84,7 +84,7 @@ class WorkoutTemplate(Base):
 class WorkoutTemplateExercise(Base):
     __tablename__ = "workout_template_exercise"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     workout_template_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("workout_template.id", ondelete="CASCADE"),
@@ -112,7 +112,7 @@ class WorkoutTemplateExercise(Base):
 class WorkoutPlan(Base):
     __tablename__ = "workout_plan"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -137,7 +137,7 @@ class WorkoutPlan(Base):
 class PlannedWorkoutSession(Base):
     __tablename__ = "planned_workout_session"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     workout_plan_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("workout_plan.id", ondelete="CASCADE"),
@@ -169,7 +169,7 @@ class PlannedWorkoutSession(Base):
 class PlannedSessionExercise(Base):
     __tablename__ = "planned_session_exercise"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     planned_session_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("planned_workout_session.id", ondelete="CASCADE"),
@@ -190,7 +190,7 @@ class PlannedSessionExercise(Base):
 class WorkoutLog(Base):
     __tablename__ = "workout_log"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -219,7 +219,7 @@ class WorkoutLog(Base):
 class WorkoutLogExercise(Base):
     __tablename__ = "workout_log_exercise"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     workout_log_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("workout_log.id", ondelete="CASCADE"),
@@ -240,7 +240,7 @@ class WorkoutLogExercise(Base):
 class WorkoutLogSet(Base):
     __tablename__ = "workout_log_set"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     workout_log_exercise_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("workout_log_exercise.id", ondelete="CASCADE"),
@@ -263,7 +263,7 @@ class WorkoutLogSet(Base):
 class ActivityLog(Base):
     __tablename__ = "activity_log"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -290,7 +290,7 @@ class ActivityLog(Base):
 class BodyMetric(Base):
     __tablename__ = "body_metric"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -311,7 +311,7 @@ class BodyMetric(Base):
 class ProgressPhoto(Base):
     __tablename__ = "progress_photo"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -332,7 +332,7 @@ class ProgressPhoto(Base):
 class PersonalRecord(Base):
     __tablename__ = "personal_record"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -357,7 +357,7 @@ class PersonalRecord(Base):
 class NotificationSchedule(Base):
     __tablename__ = "notification_schedule"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -389,7 +389,7 @@ class NotificationSchedule(Base):
 class NotificationDelivery(Base):
     __tablename__ = "notification_delivery"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     schedule_id: Mapped[str | None] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("notification_schedule.id", ondelete="SET NULL"),
@@ -413,7 +413,7 @@ class NotificationDelivery(Base):
 class ShareArtifact(Base):
     __tablename__ = "share_artifact"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="CASCADE"),
@@ -439,7 +439,7 @@ class ShareArtifact(Base):
 class AdminContent(Base):
     __tablename__ = "admin_content"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     created_by: Mapped[str | None] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="SET NULL"),
@@ -464,7 +464,7 @@ class AdminContent(Base):
 class AppEvent(Base):
     __tablename__ = "app_event"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     user_id: Mapped[str | None] = mapped_column(
         DialectUUID(as_uuid=True),
         ForeignKey("app_user.id", ondelete="SET NULL"),

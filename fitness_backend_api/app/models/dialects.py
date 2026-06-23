@@ -13,10 +13,12 @@ for SQLite and other dialects.
 from __future__ import annotations
 
 import json
+import uuid
 from typing import Any
 
-from sqlalchemy import Text
+from sqlalchemy import Text, func
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import TypeDecorator
 
 
@@ -117,3 +119,31 @@ class DialectARRAYText(TypeDecorator):
             return parsed if isinstance(parsed, list) else []
         except Exception:
             return []
+
+
+# PUBLIC_INTERFACE
+def uuid_pk_column() -> Any:
+    """Create a UUID primary key column that works on both Postgres and SQLite.
+
+    Behavior:
+    - PostgreSQL: use `server_default=gen_random_uuid()` so the DB generates UUIDs.
+      This matches the production schema/migrations (and is efficient).
+    - SQLite (tests): SQLite doesn't have `gen_random_uuid()`, so we generate UUIDs
+      in Python via `default=uuid4`.
+
+    Notes:
+    - We return a SQLAlchemy `mapped_column(...)` so callers can use:
+        id: Mapped[str] = uuid_pk_column()
+    - The returned column uses our DialectUUID type to keep DDL cross-dialect.
+    """
+
+    def _py_uuid4_str() -> str:
+        # Keep IDs as canonical text UUIDs in non-Postgres dialects.
+        return str(uuid.uuid4())
+
+    return mapped_column(
+        DialectUUID(as_uuid=True),
+        primary_key=True,
+        default=_py_uuid4_str,
+        server_default=func.gen_random_uuid(),
+    )

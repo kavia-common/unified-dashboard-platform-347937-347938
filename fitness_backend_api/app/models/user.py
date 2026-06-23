@@ -4,13 +4,13 @@ from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.dialects import DialectCITEXT, DialectJSONB, DialectUUID
+from app.models.dialects import DialectCITEXT, DialectJSONB, DialectUUID, uuid_pk_column
 
 
 class AppUser(Base):
     __tablename__ = "app_user"
 
-    id: Mapped[str] = mapped_column(DialectUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[str] = uuid_pk_column()
     firebase_uid: Mapped[str] = mapped_column(Text, nullable=False, unique=True, index=True)
     email: Mapped[str | None] = mapped_column(DialectCITEXT(), nullable=True)
     display_name: Mapped[str | None] = mapped_column(Text, nullable=True)

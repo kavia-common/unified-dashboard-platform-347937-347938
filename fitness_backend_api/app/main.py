@@ -47,7 +47,9 @@ app = FastAPI(
 cors_origins = [o.strip() for o in (settings.backend_cors_origins or "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins or ["*"],  # safe default for dev; set BACKEND_CORS_ORIGINS in env for production
+    # Prefer explicit origins (especially when allow_credentials=True). If not configured,
+    # default to common local dev frontend origins.
+    allow_origins=cors_origins or ["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

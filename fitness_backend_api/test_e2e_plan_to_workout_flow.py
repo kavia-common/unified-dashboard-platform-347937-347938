@@ -27,6 +27,7 @@ from app.models.fitness import (
     Exercise,
     PlannedSessionExercise,
     PlannedWorkoutSession,
+    WorkoutLog,
     WorkoutLogExercise,
     WorkoutLogSet,
     WorkoutPlan,
@@ -63,7 +64,18 @@ def client_and_db() -> Generator[tuple[TestClient, Session], None, None]:
     # still DDL them for SQLite sufficiently for test usage of basic columns.
     # If CI ever fails here, the correct fix is to add SQLite-friendly test metadata,
     # but for now we keep this smoke test minimal and targeted.
-    for model in (AppUser, Exercise, WorkoutPlan, PlannedWorkoutSession, PlannedSessionExercise, WorkoutLogExercise, WorkoutLogSet):
+    # Include WorkoutLog because the start-session endpoint queries and inserts into workout_log
+    # before creating workout_log_exercise and workout_log_set rows.
+    for model in (
+        AppUser,
+        Exercise,
+        WorkoutPlan,
+        PlannedWorkoutSession,
+        PlannedSessionExercise,
+        WorkoutLog,
+        WorkoutLogExercise,
+        WorkoutLogSet,
+    ):
         model.__table__.create(bind=engine, checkfirst=True)
 
     db = TestingSessionLocal()

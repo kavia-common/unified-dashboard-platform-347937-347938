@@ -46,12 +46,13 @@ from app.models.user import AppUser
 
 
 @pytest.fixture()
-def client_db_and_users() -> Generator[tuple[TestClient, Session, AppUser, AppUser], None, None]:
+def client_db_and_users() -> Generator[tuple[TestClient, Session, AppUser, AppUser, object], None, None]:
     """
     Provide a TestClient, DB session, and two users (normal + admin), wired via overrides.
+    Also provides a small helper for switching the "current user" used by auth overrides.
 
     Returns:
-        (client, db, normal_user, admin_user)
+        (client, db, normal_user, admin_user, set_user)
     """
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
@@ -129,18 +130,22 @@ def client_db_and_users() -> Generator[tuple[TestClient, Session, AppUser, AppUs
     app.dependency_overrides[require_admin] = override_require_admin
 
     with TestClient(app) as client:
-        # Attach a tiny helper so tests can switch identity without re-wiring overrides.
-        client.state._set_user = lambda u: current_user_holder.__setitem__("user", u)  # type: ignore[attr-defined]
-        yield client, db, normal_user, admin_user
+        def set_user(u: AppUser) -> None:
+            """Set the current user used by auth dependency overrides for this client."""
+            current_user_holder["user"] = u
+
+        yield client, db, normal_user, admin_user, set_user
 
     db.close()
     app.dependency_overrides.clear()
 
 
-def test_workout_log_detail_update_delete_smoke(client_db_and_users: tuple[TestClient, Session, AppUser, AppUser]) -> None:
+def test_workout_log_detail_update_delete_smoke(
+    client_db_and_users: tuple[TestClient, Session, AppUser, AppUser, object],
+) -> None:
     """Workout log: create -> get detail -> patch update -> delete -> list excludes."""
-    client, db, normal_user, _admin_user = client_db_and_users
-    client.state._set_user(normal_user)  # type: ignore[attr-defined]
+    client, db, normal_user, _admin_user, set_user = client_db_and_users
+    set_user(normal_user)  # type: ignore[operator]
 
     # Seed an Exercise so we can reference exercise_id.
     ex = Exercise(name="Bench Press", description=None, primary_muscle_group="chest")
@@ -234,11 +239,11 @@ def test_workout_log_detail_update_delete_smoke(client_db_and_users: tuple[TestC
 
 
 def test_notifications_update_delete_and_delivery_history_smoke(
-    client_db_and_users: tuple[TestClient, Session, AppUser, AppUser],
+    client_db_and_users: tuple[TestClient, Session, AppUser, AppUser, object],
 ) -> None:
     """Notifications: create schedule -> patch -> seed delivery -> list deliveries -> delete -> list excludes."""
-    client, db, normal_user, _admin_user = client_db_and_users
-    client.state._set_user(normal_user)  # type: ignore[attr-defined]
+    client, db, normal_user, _admin_user, set_user = client_db_and_users
+    set_user(normal_user)  # type: ignore[operator]
 
     # Create schedule
     resp = client.post(
@@ -308,10 +313,12 @@ def test_notifications_update_delete_and_delivery_history_smoke(
     assert all(s["id"] != schedule_id for s in schedules)
 
 
-def test_progress_metrics_prs_and_photos_crud_smoke(client_db_and_users: tuple[TestClient, Session, AppUser, AppUser]) -> None:
+def test_progress_metrics_prs_and_photos_crud_smoke(
+    client_db_and_users: tuple[TestClient, Session, AppUser, AppUser, object],
+) -> None:
     """Progress: metric create/patch/delete; PR create/patch/delete; photo create/list/delete."""
-    client, db, normal_user, _admin_user = client_db_and_users
-    client.state._set_user(normal_user)  # type: ignore[attr-defined]
+    client, db, normal_user, _admin_user, set_user = client_db_and_users
+    set_user(normal_user)  # type: ignore[operator]
 
     # Metric create
     resp = client.post(
@@ -411,10 +418,12 @@ def test_progress_metrics_prs_and_photos_crud_smoke(client_db_and_users: tuple[T
     assert all(p["id"] != photo_id for p in photos)
 
 
-def test_analytics_timeseries_and_streaks_smoke(client_db_and_users: tuple[TestClient, Session, AppUser, AppUser]) -> None:
+def test_analytics_timeseries_and_streaks_smoke(
+    client_db_and_users: tuple[TestClient, Session, AppUser, AppUser, object],
+) -> None:
     """Analytics: seed activity/workout/weight -> summary + timeseries + streaks respond with expected shapes."""
-    client, db, normal_user, _admin_user = client_db_and_users
-    client.state._set_user(normal_user)  # type: ignore[attr-defined]
+    client, db, normal_user, _admin_user, set_user = client_db_and_users
+    set_user(normal_user)  # type: ignore[operator]
 
     # Seed steps across the last 3 days (including today).
     today = date.today()
@@ -504,9 +513,11 @@ def test_analytics_timeseries_and_streaks_smoke(client_db_and_users: tuple[TestC
     assert streaks["workout_streak_days"] >= 1
 
 
-def test_admin_public_content_feed_smoke(client_db_and_users: tuple[TestClient, Session, AppUser, AppUser]) -> None:
+def test_admin_public_content_feed_smoke(
+    client_db_and_users: tuple[TestClient, Session, AppUser, AppUser, object],
+) -> None:
     """Admin content: seed published content -> /api/public/feed returns it without auth."""
-    client, db, normal_user, admin_user = client_db_and_users
+    client, db, normal_user, admin_user, set_user = client_db_and_users
 
     # Seed content via DB so the test doesn't depend on admin auth correctness to validate feed.
     published_at = datetime.now(timezone.utc) - timedelta(hours=1)
@@ -537,7 +548,7 @@ def test_admin_public_content_feed_smoke(client_db_and_users: tuple[TestClient, 
 
     # Public endpoint should not require auth; but our overrides might still be present.
     # Ensure normal user is set (should be irrelevant for public router).
-    client.state._set_user(normal_user)  # type: ignore[attr-defined]
+    set_user(normal_user)  # type: ignore[operator]
 
     resp = client.get("/api/public/feed?limit=10")
     assert resp.status_code == 200, resp.text

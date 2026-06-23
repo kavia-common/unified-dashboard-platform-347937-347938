@@ -16,6 +16,7 @@ from typing import Generator
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.auth import get_current_user
@@ -42,9 +43,17 @@ def client_and_db() -> Generator[tuple[TestClient, Session], None, None]:
     ORM models use Postgres-specific column types (UUID, JSONB, ARRAY), we create only
     the small subset of tables needed for this smoke flow via `__table__.create(...)`.
     """
+    # IMPORTANT:
+    # SQLite in-memory databases are normally *per-connection*. FastAPI dependency overrides
+    # and SQLAlchemy sessions may open new connections, which would not see tables created
+    # on a different connection (leading to "no such table: app_user").
+    #
+    # StaticPool forces SQLAlchemy to reuse a single connection for all sessions, making
+    # the in-memory DB shared for the lifetime of this engine.
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
         future=True,
     )
     TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, future=True)

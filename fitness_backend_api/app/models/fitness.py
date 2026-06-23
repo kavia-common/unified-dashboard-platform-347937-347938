@@ -325,6 +325,13 @@ class ProgressPhoto(Base):
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     caption: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Additive migration 002 fields
+    meta: Mapped[dict] = mapped_column(DialectJSONB(), nullable=False, server_default="{}")
+    mime_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    file_size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    width_px: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height_px: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     deleted_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -408,6 +415,11 @@ class NotificationDelivery(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     payload: Mapped[dict] = mapped_column(DialectJSONB(), nullable=False, server_default="{}")
+
+    # Additive migration 002 fields
+    provider_message_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    delivered_to: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class ShareArtifact(Base):

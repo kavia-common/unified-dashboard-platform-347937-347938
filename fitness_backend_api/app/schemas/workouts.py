@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -38,3 +40,55 @@ class WorkoutLogResponse(BaseModel):
     title: str | None
     notes: str | None
     rpe: int | None
+
+
+class WorkoutSetOut(BaseModel):
+    id: str
+    set_number: int
+    reps: int | None
+    weight_kg: float | None
+    duration_seconds: int | None
+    distance_meters: float | None
+    is_warmup: bool
+    rpe: int | None
+    notes: str | None
+
+
+class WorkoutExerciseOut(BaseModel):
+    id: str
+    exercise_id: str
+    position: int
+    notes: str | None
+    sets: list[WorkoutSetOut] = Field(default_factory=list)
+
+
+class WorkoutLogDetailResponse(BaseModel):
+    id: str
+    planned_session_id: str | None
+    started_at: datetime
+    ended_at: datetime | None
+    title: str | None
+    notes: str | None
+    rpe: int | None
+    calories_burned: float | None
+    exercises: list[WorkoutExerciseOut] = Field(default_factory=list)
+
+
+class WorkoutLogUpdateRequest(BaseModel):
+    """
+    Patch/update fields for a workout log.
+
+    Notes:
+    - If `exercises` is provided, it is treated as "replace all exercises+sets"
+      to keep implementation deterministic and aligned with UI editors that
+      send the full current state.
+    - If `exercises` is omitted, exercises/sets are left unchanged.
+    """
+
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    title: str | None = None
+    notes: str | None = None
+    rpe: int | None = Field(None, description="Workout-level RPE 1-10.")
+    calories_burned: float | None = None
+    exercises: list[WorkoutExerciseIn] | None = None
